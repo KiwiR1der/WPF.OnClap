@@ -14,7 +14,6 @@ namespace WPF.OnClap
         {
             bool isVisible = false;
 
-            // 2. 逻辑判断
             if (value is bool b)
             {
                 isVisible = b;
@@ -32,15 +31,6 @@ namespace WPF.OnClap
             {
                 isVisible = !isVisible;
             }
-            // 或者是针对之前代码的具体补丁：
-            // 之前的 XAML 绑定没有加 Inverse 参数，但逻辑上我们需要：
-            // 有图(True) -> 隐藏文字(Collapsed)
-            // 无图(False) -> 显示文字(Visible)
-            // 为了配合之前的代码，我们可以默认反转，或者建议修改 XAML。
-            // 
-            // 💡 最好的做法是修改 XAML 加上 ConverterParameter="Inverse"。
-            // 但为了让你直接复制能跑，这里我按标准逻辑写：True=Visible。
-            // 请看下文的 XAML 修正提示。
 
             return !isVisible ? Visibility.Visible : Visibility.Collapsed;
         }

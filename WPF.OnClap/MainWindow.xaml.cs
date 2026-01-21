@@ -1,16 +1,10 @@
 ﻿using Microsoft.Win32;
 using System.IO;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace WPF.OnClap
 {
@@ -25,7 +19,7 @@ namespace WPF.OnClap
         {
             InitializeComponent();
         }
-        
+
         // 打开/更换图片
         private void BtnOpen_Click(object sender, RoutedEventArgs e)
         {
@@ -119,40 +113,52 @@ namespace WPF.OnClap
 
                 // 应用当前的模糊设置
                 // 根据图片尺寸自适应调整半径
-                double scaleFactor = originalSource.PixelWidth / 1000.0;
-                if (scaleFactor < 1) scaleFactor = 1;
+                double scaleFactor = originalSource.PixelWidth / 1920.0;
+                if (scaleFactor < 1.0) scaleFactor = 1.0;
 
-                var blur = new BlurEffect
+                if (SliderBlur.Value > 0)
                 {
-                    Radius = SliderBlur.Value * scaleFactor,
-                    KernelType = MainBlurEffect.KernelType,
-                    RenderingBias = MainBlurEffect.RenderingBias
-                };
+                    img.Effect = new BlurEffect
+                    {
+                        Radius = SliderBlur.Value * scaleFactor, // 放大模糊半径
+                        KernelType = KernelType.Gaussian
+                    };
+                }
 
-                img.Effect = blur;
                 renderGrid.Children.Add(img);
 
-                // 强制布局
+                // 5. 关键步骤：强制触发布局系统
+                // 因为这些控件没有添加到窗体上，我们需要手动告诉它们“你们多大，该怎么摆”
                 var size = new Size(originalSource.PixelWidth, originalSource.PixelHeight);
                 renderGrid.Measure(size);
                 renderGrid.Arrange(new Rect(size));
                 renderGrid.UpdateLayout();
 
-                // 渲染
+                // 6. 渲染为位图
                 var renderBitmap = new RenderTargetBitmap(
-                    originalSource.PixelWidth, originalSource.PixelHeight,
-                    96d, 96d, PixelFormats.Pbgra32);
+                    originalSource.PixelWidth,
+                    originalSource.PixelHeight,
+                    96d, 96d, // 使用默认DPI，确保像素1:1输出
+                    PixelFormats.Pbgra32);
+
                 renderBitmap.Render(renderGrid);
 
-                // 保存
-                var encoder = new PngBitmapEncoder();
+                // 7. 编码并保存
+                BitmapEncoder encoder;
+                string ext = System.IO.Path.GetExtension(saveFileDialog.FileName).ToLower();
+                if (ext == ".jpg" || ext == ".jpeg")
+                    encoder = new JpegBitmapEncoder { QualityLevel = 90 }; // JPG 质量设为90
+                else
+                    encoder = new PngBitmapEncoder();
+
                 encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+
                 using (var stream = File.Create(saveFileDialog.FileName))
                 {
                     encoder.Save(stream);
                 }
 
-                MessageBox.Show("保存成功！", "完成");
+                MessageBox.Show("壁纸保存成功！", "完成", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
     }

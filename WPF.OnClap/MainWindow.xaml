@@ -223,7 +223,7 @@
                                 <BlurEffect
                                     x:Name="MainBlurEffect"
                                     KernelType="Gaussian"
-                                    Radius="0" />
+                                    Radius="{Binding ElementName=SliderBlur, Path=Value}" />
                             </Image.Effect>
                         </Image>
                     </Grid>
@@ -268,7 +268,7 @@
                         <RadioButton
                             Checked="RadioMethod_Checked"
                             CommandParameter="Stack"
-                            Content="堆叠"
+                            Content="堆叠(不可用)"
                             GroupName="BlurMethod"
                             Style="{StaticResource MethodRadioButton}"
                             Tag="📚" />
@@ -276,7 +276,7 @@
                         <RadioButton
                             Checked="RadioMethod_Checked"
                             CommandParameter="Radial"
-                            Content="径向"
+                            Content="径向(不可用)"
                             GroupName="BlurMethod"
                             Style="{StaticResource MethodRadioButton}"
                             Tag="◎" />
