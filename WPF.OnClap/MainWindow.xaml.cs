@@ -15,6 +15,9 @@ namespace WPF.OnClap
     {
         private BitmapImage? _currentImage;
 
+        private KernelType _kernelType = default;
+        private RenderingBias _renderingBias = default;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -39,6 +42,9 @@ namespace WPF.OnClap
                 _currentImage = bitmap;
                 ImgOriginal.Source = bitmap;
                 ImgPreview.Source = bitmap;
+
+                OriginalContainer.Background = Brushes.Transparent;
+                PreviewContainer.Background = Brushes.Transparent;
             }
         }
 
@@ -51,24 +57,28 @@ namespace WPF.OnClap
                 switch (mode)
                 {
                     case "Box":
-                        MainBlurEffect.KernelType = KernelType.Box;
-                        MainBlurEffect.RenderingBias = RenderingBias.Performance;
+                        _kernelType = KernelType.Box;
+                        _renderingBias = RenderingBias.Performance;
                         break;
                     case "Gaussian":
-                        MainBlurEffect.KernelType = KernelType.Gaussian;
-                        MainBlurEffect.RenderingBias = RenderingBias.Quality;
+                        _kernelType = KernelType.Gaussian;
+                        _renderingBias = RenderingBias.Quality;
                         break;
                     case "Stack":
                         // WPF原生没有StackBlur，用强Box模拟
-                        MainBlurEffect.KernelType = KernelType.Box;
-                        MainBlurEffect.RenderingBias = RenderingBias.Quality;
+                        _kernelType = KernelType.Box;
+                        _renderingBias = RenderingBias.Quality;
                         break;
                     case "Radial":
                         // 径向模糊需要 PixelShader，此处暂时回退到高斯以防报错
                         // 实际开发中需要引入 ShaderEffect 库
-                        MainBlurEffect.KernelType = KernelType.Gaussian;
+                        _kernelType = KernelType.Gaussian;
+                        _renderingBias = RenderingBias.Quality;
                         break;
                 }
+
+                MainBlurEffect.KernelType = _kernelType;
+                MainBlurEffect.RenderingBias = _renderingBias;
             }
         }
 
@@ -100,7 +110,7 @@ namespace WPF.OnClap
                 {
                     Width = originalSource.PixelWidth,
                     Height = originalSource.PixelHeight,
-                    Background = Brushes.White
+                    Background = Brushes.Transparent
                 };
 
                 var img = new Image
@@ -121,7 +131,8 @@ namespace WPF.OnClap
                     img.Effect = new BlurEffect
                     {
                         Radius = SliderBlur.Value * scaleFactor, // 放大模糊半径
-                        KernelType = KernelType.Gaussian
+                        KernelType = _kernelType,
+                        RenderingBias = _renderingBias
                     };
                 }
 

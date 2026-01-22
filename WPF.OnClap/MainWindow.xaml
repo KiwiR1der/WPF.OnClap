@@ -166,9 +166,10 @@
                         Text="原始图片" />
 
                     <Grid
+                        x:Name="OriginalContainer"
                         Grid.Row="1"
                         Margin="15,0,15,15"
-                        Background="#F0F0F0">
+                        Background="LightGray">
                         <Image x:Name="ImgOriginal" Stretch="Uniform" />
 
                         <Button
@@ -217,7 +218,7 @@
                         x:Name="PreviewContainer"
                         Grid.Row="1"
                         Margin="15,0,15,15"
-                        Background="#F0F0F0">
+                        Background="LightGray">
                         <Image x:Name="ImgPreview" Stretch="Uniform">
                             <Image.Effect>
                                 <BlurEffect
@@ -308,10 +309,10 @@
                         x:Name="SliderBlur"
                         VerticalAlignment="Center"
                         IsSnapToTickEnabled="True"
-                        Maximum="100"
+                        Maximum="50"
                         Minimum="0"
                         TickFrequency="1"
-                        Value="20" />
+                        Value="1" />
                 </StackPanel>
             </Grid>
         </Border>
