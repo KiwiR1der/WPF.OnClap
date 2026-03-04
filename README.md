@@ -2,10 +2,10 @@
 
 ![License](https://img.shields.io/badge/license-MIT-green) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Framework](https://img.shields.io/badge/.NET-8.0-purple)
 
-<img width="884" height="591" alt="image" src="https://github.com/user-attachments/assets/e47aa3b3-fee9-49cf-9d70-eaff553ea2be" />
-
-
 **Wallpaper Focus Tool** 是一个基于 WPF (.NET 8) 开发的桌面小工具，通过本工具，你可以快速给喜欢的图片添加**高斯模糊**、**蒙版滤镜**等效果，生成一张既保留原图氛围，又适合作为生产力桌面的“专注型”壁纸。
+
+## 💠 Preview
+<img width="884" height="591" alt="image" src="https://github.com/user-attachments/assets/32b8d374-6a9d-4dc2-9600-3524177f2b0b" />
 
 ## ✨ 功能特性 (Features)
 
