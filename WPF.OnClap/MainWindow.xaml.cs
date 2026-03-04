@@ -88,7 +88,7 @@ namespace WPF.OnClap
             SliderBlur.Value = 0;
         }
 
-        // 保存逻辑 (沿用之前的 RenderTargetBitmap 修复版)
+        // 保存逻辑 - 使用原始图片尺寸，保持高质量输出
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (ImgPreview.Source is not BitmapSource originalSource)
@@ -99,38 +99,52 @@ namespace WPF.OnClap
 
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
-                Filter = "PNG Image|*.png",
+                Filter = "PNG Image|*.png|JPEG Image|*.jpg",
                 FileName = $"Blurred_{DateTime.Now:MMdd_HHmm}"
             };
 
             if (saveFileDialog.ShowDialog() == true)
             {
-                // 构建渲染树
+                // 方案：使用原始图片尺寸进行渲染，并根据预览比例调整模糊半径
+                int pixelWidth = originalSource.PixelWidth;
+                int pixelHeight = originalSource.PixelHeight;
+
+                // 1. 计算模糊半径缩放比例
+                // 预览中图片被缩放显示，需要根据缩放比例调整模糊半径
+                double previewWidth = ImgPreview.ActualWidth;
+                double scaleFactor = 1.0;
+                
+                if (previewWidth > 0 && pixelWidth > 0)
+                {
+                    // 计算预览缩放比例：原始尺寸 / 预览尺寸
+                    scaleFactor = pixelWidth / previewWidth;
+                }
+
+                // 2. 创建与原始图片尺寸一致的渲染树
                 var renderGrid = new Grid
                 {
-                    Width = originalSource.PixelWidth,
-                    Height = originalSource.PixelHeight,
+                    Width = pixelWidth,
+                    Height = pixelHeight,
                     Background = Brushes.Transparent
                 };
 
                 var img = new Image
                 {
                     Source = originalSource,
-                    Stretch = Stretch.Fill,
-                    Width = originalSource.PixelWidth,
-                    Height = originalSource.PixelHeight
+                    Stretch = Stretch.Fill, // 1:1 填充原始尺寸
+                    Width = pixelWidth,
+                    Height = pixelHeight
                 };
 
-                // 应用当前的模糊设置
-                // 根据图片尺寸自适应调整半径
-                double scaleFactor = originalSource.PixelWidth / 1920.0;
-                if (scaleFactor < 1.0) scaleFactor = 1.0;
-
+                // 3. 应用模糊效果 - 根据缩放比例调整半径
                 if (SliderBlur.Value > 0)
                 {
+                    // 调整后的模糊半径 = Slider值 × 缩放比例
+                    double adjustedRadius = SliderBlur.Value * scaleFactor;
+                    
                     img.Effect = new BlurEffect
                     {
-                        Radius = SliderBlur.Value * scaleFactor, // 放大模糊半径
+                        Radius = adjustedRadius,
                         KernelType = _kernelType,
                         RenderingBias = _renderingBias
                     };
@@ -138,29 +152,33 @@ namespace WPF.OnClap
 
                 renderGrid.Children.Add(img);
 
-                // 5. 关键步骤：强制触发布局系统
-                // 因为这些控件没有添加到窗体上，我们需要手动告诉它们“你们多大，该怎么摆”
-                var size = new Size(originalSource.PixelWidth, originalSource.PixelHeight);
+                // 4. 强制触发布局系统
+                var size = new Size(pixelWidth, pixelHeight);
                 renderGrid.Measure(size);
                 renderGrid.Arrange(new Rect(size));
                 renderGrid.UpdateLayout();
 
-                // 6. 渲染为位图
+                // 5. 渲染为位图
                 var renderBitmap = new RenderTargetBitmap(
-                    originalSource.PixelWidth,
-                    originalSource.PixelHeight,
-                    96d, 96d, // 使用默认DPI，确保像素1:1输出
+                    pixelWidth,
+                    pixelHeight,
+                    96d, 96d,
                     PixelFormats.Pbgra32);
 
                 renderBitmap.Render(renderGrid);
 
-                // 7. 编码并保存
+                // 6. 编码并保存 - 最高质量
                 BitmapEncoder encoder;
                 string ext = System.IO.Path.GetExtension(saveFileDialog.FileName).ToLower();
+                
                 if (ext == ".jpg" || ext == ".jpeg")
-                    encoder = new JpegBitmapEncoder { QualityLevel = 90 }; // JPG 质量设为90
+                {
+                    encoder = new JpegBitmapEncoder { QualityLevel = 100 };
+                }
                 else
+                {
                     encoder = new PngBitmapEncoder();
+                }
 
                 encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
 
@@ -169,7 +187,8 @@ namespace WPF.OnClap
                     encoder.Save(stream);
                 }
 
-                MessageBox.Show("壁纸保存成功！", "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"壁纸保存成功！\n尺寸：{pixelWidth} x {pixelHeight}\n模糊半径：{SliderBlur.Value:F1} → {SliderBlur.Value * scaleFactor:F1}", 
+                    "完成", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
     }
